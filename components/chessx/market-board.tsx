@@ -20,7 +20,7 @@ export function MarketBoard({ players, selectedId, onSelect }: MarketBoardProps)
     : players
 
   return (
-    <section className="flex min-h-0 flex-col rounded-lg border border-border bg-card" aria-labelledby="market-board-title">
+    <section className="flex h-full min-h-0 flex-col overflow-hidden rounded-lg border border-border bg-card" aria-labelledby="market-board-title">
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
         <h2 id="market-board-title" className="font-mono text-xs font-semibold tracking-widest text-foreground">
           GM MARKET BOARD
@@ -45,13 +45,13 @@ export function MarketBoard({ players, selectedId, onSelect }: MarketBoardProps)
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-auto">
+      <div className="min-h-0 flex-1 overflow-y-auto">
         <table className="w-full text-left">
           <thead className="sticky top-0 bg-card">
             <tr className="border-b border-border font-mono text-[10px] tracking-wider whitespace-nowrap text-muted-foreground">
               <th scope="col" className="px-3 py-2 font-medium">GRANDMASTER</th>
-              <th scope="col" className="px-2 py-2 text-right font-medium">PRICE ($ ELO)</th>
-              <th scope="col" className="px-2 py-2 text-right font-medium">24H CHANGE</th>
+              <th scope="col" className="px-1.5 py-2 text-right font-medium">PRICE</th>
+              <th scope="col" className="px-1.5 py-2 text-right font-medium">24H</th>
               <th scope="col" className="px-3 py-2 text-right font-medium">STATUS</th>
             </tr>
           </thead>
@@ -68,29 +68,30 @@ export function MarketBoard({ players, selectedId, onSelect }: MarketBoardProps)
                     selected && 'bg-accent shadow-[inset_2px_0_0_0_var(--gain)]',
                   )}
                 >
-                  <td className="px-3 py-2.5">
+                  <td className="max-w-0 w-full py-2 pr-1 pl-3">
                     <button
                       type="button"
                       aria-pressed={selected}
+                      title={p.name}
                       onClick={(e) => {
                         e.stopPropagation()
                         onSelect(p.id)
                       }}
-                      className="text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
+                      className="block w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
                     >
-                      <span className="block text-sm font-medium text-foreground">{p.name}</span>
+                      <span className="block truncate text-sm font-medium text-foreground">{p.name}</span>
                       <span className="block font-mono text-[10px] text-muted-foreground">
                         {p.country} · {p.fideId}
                       </span>
                     </button>
                   </td>
-                  <td className="px-2 py-2.5 text-right font-mono text-sm text-foreground tabular-nums">
+                  <td className="px-1.5 py-2 text-right font-mono text-sm whitespace-nowrap text-foreground tabular-nums">
                     {formatNumber(p.price)}
                   </td>
-                  <td className={cn('px-2 py-2.5 text-right font-mono text-xs tabular-nums', pct >= 0 ? 'text-gain' : 'text-loss')}>
+                  <td className={cn('px-1.5 py-2 text-right font-mono text-xs whitespace-nowrap tabular-nums', pct >= 0 ? 'text-gain' : 'text-loss')}>
                     {formatPct(pct)}
                   </td>
-                  <td className="px-3 py-2.5 text-right">
+                  <td className="py-2 pr-3 pl-1.5 text-right">
                     <StatusBadge status={p.status} compact />
                   </td>
                 </tr>

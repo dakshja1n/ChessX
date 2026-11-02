@@ -15,14 +15,17 @@ import {
   formatTimestamp,
 } from '@/lib/market-data'
 import { HeaderBar } from './header-bar'
+import { HomeHub } from './home-hub'
 import { MarketBoard } from './market-board'
+import { MODES, type ModeId } from './modes'
 import { OrderTicket } from './order-ticket'
 import { PlayerDetail } from './player-detail'
-import { PortfolioPanel } from './portfolio-panel'
+import { RoadmapView } from './roadmap-view'
 
 const round2 = (n: number) => Math.round(n * 100) / 100
 
 export function TradingDesk() {
+  const [mode, setMode] = useState<ModeId>('spot')
   const [players, setPlayers] = useState<Player[]>(INITIAL_PLAYERS)
   const [selectedId, setSelectedId] = useState('carlsen')
   const [cash, setCash] = useState(INITIAL_CASH)
@@ -48,10 +51,15 @@ export function TradingDesk() {
 
   const player = players.find((p) => p.id === selectedId) ?? players[0]
   const ownedShares = holdings.find((h) => h.playerId === player.id)?.shares ?? 0
-  const portfolioValue = holdings.reduce((sum, h) => {
+
+  let holdingsValue = 0
+  let pnl24h = 0
+  for (const h of holdings) {
     const p = players.find((pl) => pl.id === h.playerId)
-    return sum + (p ? p.price * h.shares : 0)
-  }, 0)
+    if (!p) continue
+    holdingsValue += p.price * h.shares
+    pnl24h += (p.price - p.open) * h.shares
+  }
 
   const selectPlayer = (id: string) => {
     setSelectedId(id)
@@ -64,6 +72,7 @@ export function TradingDesk() {
     setSide('SELL')
     setSharesInput(String(holdings.find((h) => h.playerId === id)?.shares ?? 0))
     setNotice(null)
+    setMode('spot')
   }
 
   const execute = () => {
@@ -114,34 +123,54 @@ export function TradingDesk() {
     setSharesInput('1')
   }
 
+  const activeMode = MODES.find((m) => m.id === mode) ?? MODES[1]
+
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <HeaderBar players={players} cash={cash} portfolioValue={portfolioValue} />
-      <main className="flex flex-1 flex-col gap-4 p-4">
-        <h1 className="sr-only">ChessX trading desk</h1>
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] xl:grid-cols-[minmax(320px,1fr)_minmax(0,1.6fr)_minmax(320px,0.95fr)]">
-          <div className="lg:max-h-[calc(100vh-7rem)] xl:max-h-none">
-            <MarketBoard players={players} selectedId={player.id} onSelect={selectPlayer} />
+    <div className="flex h-screen w-screen flex-col overflow-hidden bg-background font-sans text-foreground">
+      <HeaderBar mode={mode} onModeChange={setMode} cash={cash} netValue={cash + holdingsValue} />
+      <main className="min-h-0 flex-1 overflow-hidden">
+        {mode === 'home' && (
+          <HomeHub
+            players={players}
+            holdings={holdings}
+            trades={trades}
+            cash={cash}
+            holdingsValue={holdingsValue}
+            pnl24h={pnl24h}
+            onModeChange={setMode}
+            onQuickSell={quickSell}
+          />
+        )}
+
+        {mode === 'spot' && (
+          <div className="grid h-full min-h-0 grid-cols-[minmax(330px,1fr)_minmax(0,2fr)_minmax(260px,1fr)] gap-4 overflow-hidden p-4">
+            <h1 className="sr-only">ChessX spot trading desk</h1>
+            <div className="flex h-full min-h-0 flex-col overflow-hidden">
+              <MarketBoard players={players} selectedId={player.id} onSelect={selectPlayer} />
+            </div>
+            <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
+              <PlayerDetail player={player} timeframe={timeframe} onTimeframeChange={setTimeframe} />
+            </div>
+            <div className="flex h-full min-h-0 flex-col overflow-y-auto">
+              <OrderTicket
+                player={player}
+                side={side}
+                onSideChange={(s) => {
+                  setSide(s)
+                  setNotice(null)
+                }}
+                sharesInput={sharesInput}
+                onSharesChange={setSharesInput}
+                cash={cash}
+                ownedShares={ownedShares}
+                onExecute={execute}
+                notice={notice}
+              />
+            </div>
           </div>
-          <PlayerDetail player={player} timeframe={timeframe} onTimeframeChange={setTimeframe} />
-          <div className="lg:col-span-2 xl:col-span-1">
-            <OrderTicket
-              player={player}
-              side={side}
-              onSideChange={(s) => {
-                setSide(s)
-                setNotice(null)
-              }}
-              sharesInput={sharesInput}
-              onSharesChange={setSharesInput}
-              cash={cash}
-              ownedShares={ownedShares}
-              onExecute={execute}
-              notice={notice}
-            />
-          </div>
-        </div>
-        <PortfolioPanel players={players} holdings={holdings} trades={trades} onQuickSell={quickSell} />
+        )}
+
+        {activeMode.status === 'phase' && <RoadmapView mode={activeMode} onModeChange={setMode} />}
       </main>
     </div>
   )

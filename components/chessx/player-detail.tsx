@@ -25,8 +25,8 @@ export function PlayerDetail({ player, timeframe, onTimeframeChange }: PlayerDet
   ]
 
   return (
-    <section className="flex flex-col rounded-lg border border-border bg-card" aria-labelledby="player-name">
-      <div className="flex flex-wrap items-start justify-between gap-4 border-b border-border px-5 py-4">
+    <section className="flex h-full min-h-0 flex-col overflow-hidden rounded-lg border border-border bg-card" aria-labelledby="player-name">
+      <div className="flex shrink-0 flex-wrap items-start justify-between gap-4 border-b border-border px-5 py-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <h2 id="player-name" className="text-xl font-semibold tracking-tight text-foreground text-balance">
@@ -49,7 +49,7 @@ export function PlayerDetail({ player, timeframe, onTimeframeChange }: PlayerDet
         </div>
       </div>
 
-      <div className="flex items-center justify-between px-5 pt-4">
+      <div className="flex shrink-0 items-center justify-between px-5 pt-3">
         <p className="font-mono text-[10px] tracking-widest text-muted-foreground">RATING HISTORY</p>
         <div className="flex rounded-md border border-border bg-background p-0.5" role="group" aria-label="Chart timeframe">
           {TIMEFRAMES.map((tf) => (
@@ -69,11 +69,11 @@ export function PlayerDetail({ player, timeframe, onTimeframeChange }: PlayerDet
         </div>
       </div>
 
-      <div className="flex min-h-64 flex-1 flex-col px-2 pt-2 pb-3">
+      <div className="flex min-h-0 flex-1 flex-col px-2 pt-2 pb-3">
         <RatingChart data={data} />
       </div>
 
-      <dl className="grid grid-cols-1 gap-3 px-5 sm:grid-cols-3">
+      <dl className="grid shrink-0 grid-cols-3 gap-3 px-5">
         {stats.map(({ label, value, icon: Icon }) => (
           <div key={label} className="rounded-md border border-border bg-background px-3 py-2.5">
             <dt className="flex items-center gap-1.5 font-mono text-[10px] tracking-widest text-muted-foreground">
@@ -87,7 +87,7 @@ export function PlayerDetail({ player, timeframe, onTimeframeChange }: PlayerDet
         ))}
       </dl>
 
-      <div className="m-5 mt-3 flex items-center gap-2 rounded-md border border-gain/25 bg-gain/5 px-3 py-2 text-xs text-foreground">
+      <div className="m-4 mx-5 mt-3 flex shrink-0 items-center gap-2 rounded-md border border-gain/25 bg-gain/5 px-3 py-2 text-xs text-foreground">
         <Info className="size-4 shrink-0 text-gain" aria-hidden="true" />
         <p>
           Rating is live. Every <span className="font-mono font-semibold text-gain">1 Elo</span> equals{' '}

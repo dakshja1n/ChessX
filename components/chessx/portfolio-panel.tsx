@@ -10,12 +10,13 @@ type PortfolioPanelProps = {
   holdings: Holding[]
   trades: Trade[]
   onQuickSell: (playerId: string) => void
+  title?: string
 }
 
-const th = 'px-4 py-2.5 font-medium whitespace-nowrap'
-const td = 'px-4 py-3 whitespace-nowrap'
+const th = 'px-4 py-2 font-medium whitespace-nowrap'
+const td = 'px-4 py-2 whitespace-nowrap'
 
-export function PortfolioPanel({ players, holdings, trades, onQuickSell }: PortfolioPanelProps) {
+export function PortfolioPanel({ players, holdings, trades, onQuickSell, title }: PortfolioPanelProps) {
   const [tab, setTab] = useState<'holdings' | 'audit'>('holdings')
   const byId = new Map(players.map((p) => [p.id, p]))
 
@@ -25,8 +26,11 @@ export function PortfolioPanel({ players, holdings, trades, onQuickSell }: Portf
   ]
 
   return (
-    <section className="rounded-lg border border-border bg-card" aria-label="Portfolio and audit trail">
-      <div className="flex items-center gap-1 border-b border-border px-2" role="tablist">
+    <section className="flex min-h-0 flex-1 flex-col rounded-lg border border-border bg-card" aria-label={title ?? 'Portfolio and audit trail'}>
+      <div className="flex shrink-0 items-center gap-1 border-b border-border px-2" role="tablist">
+        {title && (
+          <h2 className="mr-3 ml-2 font-mono text-xs font-semibold tracking-widest text-foreground">{title}</h2>
+        )}
         {tabs.map(({ id, label, icon: Icon, count }) => (
           <button
             key={id}
@@ -37,7 +41,7 @@ export function PortfolioPanel({ players, holdings, trades, onQuickSell }: Portf
             aria-controls={`panel-${id}`}
             onClick={() => setTab(id)}
             className={cn(
-              '-mb-px flex items-center gap-2 border-b-2 px-3 py-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+              '-mb-px flex items-center gap-2 border-b-2 px-3 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
               tab === id ? 'border-gain text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground',
             )}
           >
@@ -48,7 +52,7 @@ export function PortfolioPanel({ players, holdings, trades, onQuickSell }: Portf
         ))}
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="min-h-0 flex-1 overflow-auto [&_thead]:sticky [&_thead]:top-0 [&_thead]:bg-card">
         {tab === 'holdings' ? (
           <table id="panel-holdings" role="tabpanel" aria-labelledby="tab-holdings" className="w-full text-left">
             <thead>
