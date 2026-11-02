@@ -63,7 +63,7 @@ export function OrderTicket({
         <span className="font-mono text-[10px] text-muted-foreground">MARKET · {player.tickerName.toUpperCase()}</span>
       </div>
 
-      <div className="flex flex-col gap-4 p-4">
+      <div className="flex flex-col gap-3 p-3">
         <div className="grid grid-cols-2 rounded-md border border-border bg-background p-1" role="tablist" aria-label="Order side">
           {(['BUY', 'SELL'] as const).map((s) => {
             const active = side === s

@@ -5,7 +5,7 @@ import { type ChartPoint, formatUSD } from '@/lib/market-data'
 
 export function RatingChart({ data }: { data: ChartPoint[] }) {
   return (
-    <div className="h-64 w-full flex-1 sm:h-72 xl:h-auto xl:min-h-72" role="img" aria-label="Rating price history chart">
+    <div className="h-full min-h-0 w-full flex-1" role="img" aria-label="Rating price history chart">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
           <defs>
