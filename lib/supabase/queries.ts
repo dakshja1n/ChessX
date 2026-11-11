@@ -89,12 +89,13 @@ export async function upsertDisplayName(userId: string, displayName: string) {
   if (error) throw error
 }
 
-export async function executeTrade(playerId: string, side: 'BUY' | 'SELL', shares: number, price: number) {
+export async function executeTrade(playerId: string, side: 'BUY' | 'SELL', shares: number, price: number, leverage = 1) {
   const { data, error } = await supabase.rpc('execute_trade', {
     p_player_id: playerId,
     p_side: side,
     p_shares: shares,
     p_price: price,
+    p_leverage: leverage,
   })
   if (error) throw error
   return data

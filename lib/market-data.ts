@@ -19,6 +19,9 @@ export type Holding = {
   playerId: string
   shares: number
   avgPrice: number
+  leverage: number
+  borrowedAmount: number
+  liquidationPrice: number | null
 }
 
 export type TradeSide = 'BUY' | 'SELL'
@@ -63,8 +66,8 @@ export const INITIAL_PLAYERS: Player[] = seeds.map(({ change24h, ...p }) => ({
 export const INITIAL_CASH = 10_000
 
 export const INITIAL_HOLDINGS: Holding[] = [
-  { playerId: 'carlsen', shares: 3, avgPrice: 2791.4 },
-  { playerId: 'gukesh', shares: 2, avgPrice: 2741.25 },
+  { playerId: 'carlsen', shares: 3, avgPrice: 2791.4, leverage: 1, borrowedAmount: 0, liquidationPrice: null },
+  { playerId: 'gukesh', shares: 2, avgPrice: 2741.25, leverage: 1, borrowedAmount: 0, liquidationPrice: null },
 ]
 
 export const INITIAL_TRADES: Trade[] = [

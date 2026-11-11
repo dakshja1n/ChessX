@@ -171,6 +171,34 @@ async function main() {
     }
   }
 
+  console.log('\n6. Checking leveraged positions for liquidation...')
+  const { data: underwater, error: liqFetchErr } = await supabase
+    .from('holdings')
+    .select('user_id, player_id, liquidation_price, players(elo)')
+    .gt('leverage', 1)
+    .not('liquidation_price', 'is', null)
+
+  if (liqFetchErr) {
+    console.error('   Could not fetch leveraged holdings:', liqFetchErr.message)
+  } else {
+    const toliquidate = (underwater ?? []).filter(h => h.players && h.players.elo <= h.liquidation_price)
+    if (toliquidate.length === 0) {
+      console.log('   ✓ No positions underwater')
+    } else {
+      for (const h of toliquidate) {
+        const { error: liqErr } = await supabase.rpc('liquidate_position', {
+          p_user_id: h.user_id,
+          p_player_id: h.player_id,
+        })
+        if (liqErr) {
+          console.error(`   Failed to liquidate ${h.user_id}/${h.player_id}:`, liqErr.message)
+        } else {
+          console.log(`   ✓ Liquidated position: user=${h.user_id.slice(0, 8)} player=${h.player_id.slice(0, 8)} (elo=${h.players.elo} <= liq=${h.liquidation_price})`)
+        }
+      }
+    }
+  }
+
   // Cleanup
   try { unlinkSync(TMP_ZIP) } catch {}
   try { unlinkSync(xmlPath) } catch {}

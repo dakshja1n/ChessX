@@ -43,6 +43,9 @@ function dbHoldingToHolding(h: Record<string, unknown>): Holding {
     playerId: h.player_id as string,
     shares: Number(h.shares),
     avgPrice: Number(h.avg_cost),
+    leverage: Number(h.leverage ?? 1),
+    borrowedAmount: Number(h.borrowed_amount ?? 0),
+    liquidationPrice: h.liquidation_price != null ? Number(h.liquidation_price) : null,
   }
 }
 
@@ -73,6 +76,7 @@ export function TradingDesk() {
   const [trades, setTrades] = useState<Trade[]>([])
   const [side, setSide] = useState<TradeSide>('BUY')
   const [sharesInput, setSharesInput] = useState('1')
+  const [leverage, setLeverage] = useState(1)
   const [timeframe, setTimeframe] = useState<Timeframe>('1D')
   const [notice, setNotice] = useState<string | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
@@ -169,6 +173,7 @@ export function TradingDesk() {
   const selectPlayer = (id: string) => {
     setSelectedId(id)
     setSharesInput('1')
+    setLeverage(1)
     setNotice(null)
   }
 
@@ -186,7 +191,7 @@ export function TradingDesk() {
     if (!shares || shares <= 0 || player.status === 'locked') return
 
     try {
-      await executeTrade(player.id, side, shares, player.price)
+      await executeTrade(player.id, side, shares, player.price, leverage)
       await reload(userId)
       setNotice(`${side === 'BUY' ? 'Bought' : 'Sold'} ${shares} × ${player.tickerName} @ $${player.price.toFixed(2)} — FILLED`)
       setSharesInput('1')
@@ -248,6 +253,8 @@ export function TradingDesk() {
                 }}
                 sharesInput={sharesInput}
                 onSharesChange={setSharesInput}
+                leverage={leverage}
+                onLeverageChange={setLeverage}
                 cash={cash}
                 ownedShares={ownedShares}
                 onExecute={execute}

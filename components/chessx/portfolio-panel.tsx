@@ -58,11 +58,12 @@ export function PortfolioPanel({ players, holdings, trades, onQuickSell, title }
             <thead>
               <tr className="border-b border-border font-mono text-[10px] tracking-wider text-muted-foreground">
                 <th scope="col" className={th}>GRANDMASTER</th>
-                <th scope="col" className={cn(th, 'text-right')}>SHARES OWNED</th>
-                <th scope="col" className={cn(th, 'text-right')}>AVG BUY PRICE</th>
-                <th scope="col" className={cn(th, 'text-right')}>CURRENT RATING</th>
-                <th scope="col" className={cn(th, 'text-right')}>TOTAL VALUE</th>
-                <th scope="col" className={cn(th, 'text-right')}>UNREALIZED P&amp;L ($ / %)</th>
+                <th scope="col" className={cn(th, 'text-right')}>SHARES</th>
+                <th scope="col" className={cn(th, 'text-right')}>AVG COST</th>
+                <th scope="col" className={cn(th, 'text-right')}>CURRENT</th>
+                <th scope="col" className={cn(th, 'text-right')}>VALUE</th>
+                <th scope="col" className={cn(th, 'text-right')}>UNREALIZED P&amp;L</th>
+                <th scope="col" className={cn(th, 'text-right')}>LIQ. PRICE</th>
                 <th scope="col" className={cn(th, 'text-right')}>QUICK ACTION</th>
               </tr>
             </thead>
@@ -71,11 +72,21 @@ export function PortfolioPanel({ players, holdings, trades, onQuickSell, title }
                 const p = byId.get(h.playerId)
                 if (!p) return null
                 const value = h.shares * p.price
-                const pnl = (p.price - h.avgPrice) * h.shares
-                const pnlPct = ((p.price - h.avgPrice) / h.avgPrice) * 100
+                // For leveraged positions, P&L is amplified: gain on notional, cost basis is equity only
+                const equity = h.shares * h.avgPrice / h.leverage
+                const pnl = value - (h.shares * h.avgPrice)
+                const pnlPct = ((p.price - h.avgPrice) / h.avgPrice) * 100 * h.leverage
+                const isLeveraged = h.leverage > 1
                 return (
                   <tr key={h.playerId} className="border-b border-border/60 last:border-0">
-                    <td className={cn(td, 'font-sans font-medium text-foreground')}>{p.name}</td>
+                    <td className={cn(td, 'font-sans font-medium text-foreground')}>
+                      <span>{p.name}</span>
+                      {isLeveraged && (
+                        <span className="ml-2 rounded-sm bg-gain/15 px-1.5 py-0.5 font-mono text-[9px] font-bold text-gain">
+                          {h.leverage}×
+                        </span>
+                      )}
+                    </td>
                     <td className={cn(td, 'text-right tabular-nums')}>{h.shares}</td>
                     <td className={cn(td, 'text-right tabular-nums text-muted-foreground')}>{formatNumber(h.avgPrice)}</td>
                     <td className={cn(td, 'text-right tabular-nums')}>{formatNumber(p.price)}</td>
@@ -83,6 +94,13 @@ export function PortfolioPanel({ players, holdings, trades, onQuickSell, title }
                     <td className={cn(td, 'text-right tabular-nums', pnl >= 0 ? 'text-gain' : 'text-loss')}>
                       {pnl >= 0 ? '+' : '-'}
                       {formatUSD(Math.abs(pnl))} / {formatPct(pnlPct)}
+                    </td>
+                    <td className={cn(td, 'text-right tabular-nums')}>
+                      {h.liquidationPrice != null ? (
+                        <span className="text-loss">{formatNumber(h.liquidationPrice)}</span>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
                     </td>
                     <td className={cn(td, 'text-right')}>
                       <button
@@ -99,7 +117,7 @@ export function PortfolioPanel({ players, holdings, trades, onQuickSell, title }
               })}
               {holdings.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center font-sans text-sm text-muted-foreground">
+                  <td colSpan={8} className="px-4 py-8 text-center font-sans text-sm text-muted-foreground">
                     No open positions. Buy shares from the order ticket to get started.
                   </td>
                 </tr>
