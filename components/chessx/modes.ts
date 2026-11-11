@@ -1,6 +1,6 @@
-import { Activity, CalendarRange, Gauge, House, TrendingUp, type LucideIcon } from 'lucide-react'
+import { Gauge, House, Trophy, TrendingUp, type LucideIcon } from 'lucide-react'
 
-export type ModeId = 'home' | 'spot' | 'prodigy' | 'staking' | 'blitz'
+export type ModeId = 'home' | 'spot' | 'blitz' | 'leaderboard'
 
 export type ModeConfig = {
   id: ModeId
@@ -35,26 +35,6 @@ export const MODES: ModeConfig[] = [
     description: 'Trade GM Elo equity with 0.5% fees and live match locks.',
   },
   {
-    id: 'prodigy',
-    short: 'M2',
-    label: 'Prodigy Curve',
-    tag: 'Phase 4',
-    status: 'phase',
-    icon: Activity,
-    title: 'Mode 2: Prodigy Curve',
-    description: 'AMM continuous bonding curves for rising GMs.',
-  },
-  {
-    id: 'staking',
-    short: 'M3',
-    label: 'Event Staking',
-    tag: 'Phase 3',
-    status: 'phase',
-    icon: CalendarRange,
-    title: 'Mode 3: Event Staking & Drafts',
-    description: 'Salary cap tournament draft rooms with yield payouts.',
-  },
-  {
     id: 'blitz',
     short: 'M4',
     label: 'Blitz CLOB',
@@ -63,5 +43,15 @@ export const MODES: ModeConfig[] = [
     icon: Gauge,
     title: 'Mode 4: Wall Street Blitz',
     description: 'High-frequency Central Limit Order Book for blitz games.',
+  },
+  {
+    id: 'leaderboard',
+    short: 'LB',
+    label: 'Leaderboard',
+    tag: 'Live',
+    status: 'active',
+    icon: Trophy,
+    title: 'Leaderboard',
+    description: 'Ranked net worth across all ChessX traders.',
   },
 ]

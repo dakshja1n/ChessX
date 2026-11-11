@@ -55,7 +55,7 @@ export function HomeHub({ players, holdings, trades, cash, holdingsValue, pnl24h
         </dl>
       </section>
 
-      <section aria-label="Game modes" className="grid shrink-0 grid-cols-2 gap-3 xl:grid-cols-4">
+      <section aria-label="Game modes" className="grid shrink-0 grid-cols-2 gap-3">
         {gameModes.map((m) => {
           const Icon = m.icon
           const active = m.status === 'active'

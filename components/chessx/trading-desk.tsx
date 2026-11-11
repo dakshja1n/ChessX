@@ -14,6 +14,7 @@ import {
 } from '@/lib/market-data'
 import { HeaderBar } from './header-bar'
 import { HomeHub } from './home-hub'
+import { LeaderboardView } from './leaderboard-view'
 import { MarketBoard } from './market-board'
 import { MODES, type ModeId } from './modes'
 import { OrderTicket } from './order-ticket'
@@ -251,6 +252,7 @@ export function TradingDesk() {
         )}
 
         {activeMode.status === 'phase' && <RoadmapView mode={activeMode} onModeChange={setMode} />}
+        {mode === 'leaderboard' && <LeaderboardView userId={userId} />}
       </main>
     </div>
   )

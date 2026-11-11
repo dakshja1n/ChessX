@@ -66,6 +66,12 @@ export async function fetchTrades(userId: string) {
   return data ?? []
 }
 
+export async function fetchLeaderboard() {
+  const { data, error } = await supabase.rpc('get_leaderboard')
+  if (error) throw error
+  return (data ?? []) as { rank: number; user_id: string; net_worth: number }[]
+}
+
 export async function executeTrade(playerId: string, side: 'BUY' | 'SELL', shares: number, price: number) {
   const { data, error } = await supabase.rpc('execute_trade', {
     p_player_id: playerId,
