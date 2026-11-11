@@ -148,6 +148,31 @@ async function main() {
 
   console.log(`   ✓ Upserted ${players.length} players`)
 
+  console.log('\n5. Snapshotting rating history...')
+  const { data: dbPlayers, error: fetchErr } = await supabase
+    .from('players')
+    .select('id, fide_id, elo')
+
+  if (fetchErr) {
+    console.error('   Could not fetch player IDs for history snapshot:', fetchErr.message)
+  } else {
+    const fideIdToDbId = new Map(dbPlayers.map(p => [p.fide_id, p.id]))
+    const syncedAt = new Date().toISOString()
+    const historyRows = players
+      .map(p => ({ player_id: fideIdToDbId.get(p.fide_id), elo: p.elo, synced_at: syncedAt }))
+      .filter(r => r.player_id)
+
+    const { error: histErr } = await supabase
+      .from('rating_history')
+      .insert(historyRows)
+
+    if (histErr) {
+      console.error('   History snapshot error:', histErr.message)
+    } else {
+      console.log(`   ✓ Inserted ${historyRows.length} history rows`)
+    }
+  }
+
   // Cleanup
   try { unlinkSync(TMP_ZIP) } catch {}
   try { unlinkSync(xmlPath) } catch {}

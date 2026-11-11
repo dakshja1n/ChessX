@@ -6,6 +6,7 @@ export type Player = {
   tickerName: string
   country: string
   fideId: string
+  title: string
   price: number
   open: number
   status: TradingStatus
@@ -42,16 +43,16 @@ export const FEE_RATE = 0.005
 type PlayerSeed = Omit<Player, 'open'> & { change24h: number }
 
 const seeds: PlayerSeed[] = [
-  { id: 'carlsen', name: 'Magnus Carlsen', tickerName: 'Carlsen', country: 'NO', fideId: '1503014', price: 2830.5, change24h: 0.4, status: 'active', peakElo: 2882, winRate: 74.8, tournament: 'Norway Chess 2026' },
-  { id: 'nakamura', name: 'Hikaru Nakamura', tickerName: 'Hikaru', country: 'US', fideId: '2016192', price: 2802.1, change24h: -0.1, status: 'active', peakElo: 2816, winRate: 68.2, tournament: 'Norway Chess 2026' },
-  { id: 'gukesh', name: 'Gukesh Dommaraju', tickerName: 'Gukesh', country: 'IN', fideId: '46616543', price: 2794.0, change24h: 1.2, status: 'locked', peakElo: 2794, winRate: 66.5, tournament: 'Norway Chess 2026' },
-  { id: 'caruana', name: 'Fabiano Caruana', tickerName: 'Caruana', country: 'US', fideId: '2020009', price: 2783.4, change24h: -0.6, status: 'active', peakElo: 2844, winRate: 67.1, tournament: 'Grand Chess Tour Bucharest' },
-  { id: 'erigaisi', name: 'Arjun Erigaisi', tickerName: 'Erigaisi', country: 'IN', fideId: '35009192', price: 2779.8, change24h: 0.8, status: 'active', peakElo: 2801, winRate: 64.9, tournament: 'Tata Steel Masters 2026' },
-  { id: 'firouzja', name: 'Alireza Firouzja', tickerName: 'Firouzja', country: 'FR', fideId: '12573981', price: 2763.2, change24h: -1.4, status: 'locked', peakElo: 2804, winRate: 63.7, tournament: 'Grand Chess Tour Paris' },
-  { id: 'pragg', name: 'R Praggnanandhaa', tickerName: 'Pragg', country: 'IN', fideId: '25059530', price: 2758.6, change24h: 0.3, status: 'active', peakElo: 2779, winRate: 62.4, tournament: 'Tata Steel Masters 2026' },
-  { id: 'weiyi', name: 'Wei Yi', tickerName: 'Wei Yi', country: 'CN', fideId: '8603405', price: 2754.0, change24h: 0.0, status: 'active', peakElo: 2763, winRate: 61.8, tournament: 'Chinese League 2026' },
-  { id: 'abdusattorov', name: 'Nodirbek Abdusattorov', tickerName: 'Abdusattorov', country: 'UZ', fideId: '14204118', price: 2751.3, change24h: -0.2, status: 'active', peakElo: 2780, winRate: 63.0, tournament: 'Superbet Rapid & Blitz' },
-  { id: 'ding', name: 'Ding Liren', tickerName: 'Ding', country: 'CN', fideId: '8603677', price: 2734.9, change24h: -0.9, status: 'active', peakElo: 2816, winRate: 58.6, tournament: 'Chinese League 2026' },
+  { id: 'carlsen', name: 'Magnus Carlsen', tickerName: 'Carlsen', title: 'GM', country: 'NO', fideId: '1503014', price: 2830.5, change24h: 0.4, status: 'active', peakElo: 2882, winRate: 74.8, tournament: 'Norway Chess 2026' },
+  { id: 'nakamura', name: 'Hikaru Nakamura', tickerName: 'Hikaru', title: 'GM', country: 'US', fideId: '2016192', price: 2802.1, change24h: -0.1, status: 'active', peakElo: 2816, winRate: 68.2, tournament: 'Norway Chess 2026' },
+  { id: 'gukesh', name: 'Gukesh Dommaraju', tickerName: 'Gukesh', title: 'GM', country: 'IN', fideId: '46616543', price: 2794.0, change24h: 1.2, status: 'locked', peakElo: 2794, winRate: 66.5, tournament: 'Norway Chess 2026' },
+  { id: 'caruana', name: 'Fabiano Caruana', tickerName: 'Caruana', title: 'GM', country: 'US', fideId: '2020009', price: 2783.4, change24h: -0.6, status: 'active', peakElo: 2844, winRate: 67.1, tournament: 'Grand Chess Tour Bucharest' },
+  { id: 'erigaisi', name: 'Arjun Erigaisi', tickerName: 'Erigaisi', title: 'GM', country: 'IN', fideId: '35009192', price: 2779.8, change24h: 0.8, status: 'active', peakElo: 2801, winRate: 64.9, tournament: 'Tata Steel Masters 2026' },
+  { id: 'firouzja', name: 'Alireza Firouzja', tickerName: 'Firouzja', title: 'GM', country: 'FR', fideId: '12573981', price: 2763.2, change24h: -1.4, status: 'locked', peakElo: 2804, winRate: 63.7, tournament: 'Grand Chess Tour Paris' },
+  { id: 'pragg', name: 'R Praggnanandhaa', tickerName: 'Pragg', title: 'GM', country: 'IN', fideId: '25059530', price: 2758.6, change24h: 0.3, status: 'active', peakElo: 2779, winRate: 62.4, tournament: 'Tata Steel Masters 2026' },
+  { id: 'weiyi', name: 'Wei Yi', tickerName: 'Wei Yi', title: 'GM', country: 'CN', fideId: '8603405', price: 2754.0, change24h: 0.0, status: 'active', peakElo: 2763, winRate: 61.8, tournament: 'Chinese League 2026' },
+  { id: 'abdusattorov', name: 'Nodirbek Abdusattorov', tickerName: 'Abdusattorov', title: 'GM', country: 'UZ', fideId: '14204118', price: 2751.3, change24h: -0.2, status: 'active', peakElo: 2780, winRate: 63.0, tournament: 'Superbet Rapid & Blitz' },
+  { id: 'ding', name: 'Ding Liren', tickerName: 'Ding', title: 'GM', country: 'CN', fideId: '8603677', price: 2734.9, change24h: -0.9, status: 'active', peakElo: 2816, winRate: 58.6, tournament: 'Chinese League 2026' },
 ]
 
 export const INITIAL_PLAYERS: Player[] = seeds.map(({ change24h, ...p }) => ({

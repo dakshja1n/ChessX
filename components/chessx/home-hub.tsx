@@ -11,11 +11,12 @@ type HomeHubProps = {
   cash: number
   holdingsValue: number
   pnl24h: number
+  displayName: string
   onModeChange: (mode: ModeId) => void
   onQuickSell: (playerId: string) => void
 }
 
-export function HomeHub({ players, holdings, trades, cash, holdingsValue, pnl24h, onModeChange, onQuickSell }: HomeHubProps) {
+export function HomeHub({ players, holdings, trades, cash, holdingsValue, pnl24h, displayName, onModeChange, onQuickSell }: HomeHubProps) {
   const netWorth = cash + holdingsValue
   const pnlPct = holdingsValue - pnl24h > 0 ? (pnl24h / (holdingsValue - pnl24h)) * 100 : 0
   const gameModes = MODES.filter((m) => m.id !== 'home')
@@ -25,7 +26,7 @@ export function HomeHub({ players, holdings, trades, cash, holdingsValue, pnl24h
     { label: 'CASH', value: formatUSD(cash), tone: 'text-foreground' },
     { label: 'HOLDINGS', value: formatUSD(holdingsValue), tone: 'text-foreground' },
     {
-      label: '24H P&L',
+      label: 'MTD P&L',
       value: `${pnl24h >= 0 ? '+' : '-'}${formatUSD(Math.abs(pnl24h))} (${formatPct(pnlPct)})`,
       tone: pnl24h >= 0 ? 'text-gain' : 'text-loss',
     },
@@ -40,7 +41,7 @@ export function HomeHub({ players, holdings, trades, cash, holdingsValue, pnl24h
         <div>
           <p className="font-mono text-[10px] tracking-widest text-gain">MARKETS OPEN · NOV 2, 2026</p>
           <h1 id="welcome-title" className="mt-1 text-xl font-semibold tracking-tight text-foreground text-balance">
-            Welcome back, Jordan
+            Welcome back, {displayName}
           </h1>
           <p className="mt-0.5 text-xs text-muted-foreground">Every Elo point is a dollar. Here&apos;s where your book stands.</p>
         </div>

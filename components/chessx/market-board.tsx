@@ -51,7 +51,7 @@ export function MarketBoard({ players, selectedId, onSelect }: MarketBoardProps)
             <tr className="border-b border-border font-mono text-[10px] tracking-wider whitespace-nowrap text-muted-foreground">
               <th scope="col" className="px-3 py-2 font-medium">GRANDMASTER</th>
               <th scope="col" className="px-1.5 py-2 text-right font-medium">PRICE</th>
-              <th scope="col" className="px-1.5 py-2 text-right font-medium">24H</th>
+              <th scope="col" className="px-1.5 py-2 text-right font-medium">MTD</th>
               <th scope="col" className="px-3 py-2 text-right font-medium">STATUS</th>
             </tr>
           </thead>

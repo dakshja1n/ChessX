@@ -9,6 +9,17 @@ export async function fetchPlayers() {
   return data
 }
 
+export async function fetchRatingHistory(playerId: string) {
+  const { data, error } = await supabase
+    .from('rating_history')
+    .select('elo, synced_at')
+    .eq('player_id', playerId)
+    .order('synced_at', { ascending: true })
+    .limit(60)
+  if (error) throw error
+  return data ?? []
+}
+
 export async function fetchPortfolio(userId: string) {
   const { data, error } = await supabase
     .from('portfolios')

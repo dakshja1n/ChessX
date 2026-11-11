@@ -1,10 +1,10 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { supabase } from '@/lib/supabase/client'
-import { fetchPlayers, fetchPortfolio, fetchHoldings, fetchTrades, executeTrade } from '@/lib/supabase/queries'
+import { fetchPlayers, fetchPortfolio, fetchHoldings, fetchTrades, executeTrade, fetchRatingHistory } from '@/lib/supabase/queries'
 import {
-  FEE_RATE,
+  type ChartPoint,
   type Holding,
   type Player,
   type Timeframe,
@@ -20,15 +20,14 @@ import { OrderTicket } from './order-ticket'
 import { PlayerDetail } from './player-detail'
 import { RoadmapView } from './roadmap-view'
 
-const round2 = (n: number) => Math.round(n * 100) / 100
-
 function dbPlayerToPlayer(p: Record<string, unknown>): Player {
   return {
     id: p.id as string,
     name: p.name as string,
     tickerName: ((p.name as string).split(' ').pop() ?? (p.name as string)),
-    country: '—',
+    country: (p.country as string) ?? '—',
     fideId: (p.fide_id as string) ?? '',
+    title: (p.title as string) ?? 'GM',
     price: Number(p.elo),
     open: Number(p.elo) - Number(p.elo_change_24h ?? 0),
     status: p.is_locked ? 'locked' : 'active',
@@ -59,6 +58,11 @@ function dbTradeToTrade(t: Record<string, unknown>): Trade {
   }
 }
 
+function formatSyncDate(iso: string): string {
+  const d = new Date(iso)
+  return d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
+}
+
 export function TradingDesk() {
   const [mode, setMode] = useState<ModeId>('spot')
   const [players, setPlayers] = useState<Player[]>([])
@@ -71,7 +75,10 @@ export function TradingDesk() {
   const [timeframe, setTimeframe] = useState<Timeframe>('1D')
   const [notice, setNotice] = useState<string | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
+  const [displayName, setDisplayName] = useState<string>('Trader')
   const [loading, setLoading] = useState(true)
+  const [ratingHistoryCache, setRatingHistoryCache] = useState<Map<string, ChartPoint[]>>(new Map())
+  const fetchingHistory = useRef<Set<string>>(new Set())
 
   const reload = useCallback(async (uid: string) => {
     const [dbPlayers, portfolio, dbHoldings, dbTrades] = await Promise.all([
@@ -92,6 +99,9 @@ export function TradingDesk() {
     supabase.auth.getUser().then(({ data }) => {
       const uid = data.user?.id ?? null
       setUserId(uid)
+      const email = data.user?.email ?? ''
+      const name = data.user?.user_metadata?.full_name ?? data.user?.user_metadata?.name ?? email.split('@')[0] ?? 'Trader'
+      setDisplayName(name.charAt(0).toUpperCase() + name.slice(1))
       if (uid) {
         reload(uid)
           .catch((err) => console.error('Failed to load market data:', err))
@@ -104,6 +114,25 @@ export function TradingDesk() {
       setLoading(false)
     })
   }, [reload])
+
+  // Fetch rating history for selected player if not cached
+  useEffect(() => {
+    if (!selectedId || ratingHistoryCache.has(selectedId) || fetchingHistory.current.has(selectedId)) return
+    fetchingHistory.current.add(selectedId)
+    fetchRatingHistory(selectedId)
+      .then((rows) => {
+        if (rows.length >= 2) {
+          const points: ChartPoint[] = rows.map((r) => ({
+            label: formatSyncDate(r.synced_at),
+            price: r.elo,
+          }))
+          setRatingHistoryCache((prev) => new Map(prev).set(selectedId, points))
+        }
+        // If fewer than 2 points, leave cache empty → falls back to generated history
+      })
+      .catch(() => { /* leave cache empty, fall back to generated */ })
+      .finally(() => { fetchingHistory.current.delete(selectedId) })
+  }, [selectedId, ratingHistoryCache])
 
   // Realtime player updates
   useEffect(() => {
@@ -182,6 +211,7 @@ export function TradingDesk() {
             cash={cash}
             holdingsValue={holdingsValue}
             pnl24h={pnl24h}
+            displayName={displayName}
             onModeChange={setMode}
             onQuickSell={quickSell}
           />
@@ -194,7 +224,12 @@ export function TradingDesk() {
               <MarketBoard players={players} selectedId={player.id} onSelect={selectPlayer} />
             </div>
             <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
-              <PlayerDetail player={player} timeframe={timeframe} onTimeframeChange={setTimeframe} />
+              <PlayerDetail
+                player={player}
+                timeframe={timeframe}
+                onTimeframeChange={setTimeframe}
+                ratingHistory={ratingHistoryCache.get(player.id)}
+              />
             </div>
             <div className="flex h-full min-h-0 flex-col overflow-y-auto">
               <OrderTicket
@@ -220,3 +255,4 @@ export function TradingDesk() {
     </div>
   )
 }
+
