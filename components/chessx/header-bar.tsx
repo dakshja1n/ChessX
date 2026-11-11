@@ -9,13 +9,14 @@ type HeaderBarProps = {
   onModeChange: (mode: ModeId) => void
   cash: number
   netValue: number
+  displayName: string
 }
 
-export function HeaderBar({ mode, onModeChange, cash, netValue }: HeaderBarProps) {
+export function HeaderBar({ mode, onModeChange, cash, netValue, displayName }: HeaderBarProps) {
   return (
     <header className="flex shrink-0 items-center gap-3 border-b border-border bg-panel px-3 py-2">
       <div className="flex shrink-0 items-center gap-3">
-        <SettingsSheet cash={cash} />
+        <SettingsSheet cash={cash} displayName={displayName} />
         <div className="flex items-center gap-2.5">
           <div className="relative flex size-8 items-center justify-center rounded-md bg-gain/10 ring-1 ring-gain/40">
             <ChessKnight className="size-4.5 text-gain" aria-hidden="true" />
@@ -86,9 +87,9 @@ export function HeaderBar({ mode, onModeChange, cash, netValue }: HeaderBarProps
         <div
           className="flex size-8 items-center justify-center rounded-full bg-secondary font-mono text-[11px] font-semibold text-foreground ring-1 ring-border"
           role="img"
-          aria-label="Account: Jordan Diaz"
+          aria-label={`Account: ${displayName}`}
         >
-          JD
+          {displayName.slice(0, 2).toUpperCase()}
         </div>
       </div>
     </header>

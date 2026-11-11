@@ -69,7 +69,24 @@ export async function fetchTrades(userId: string) {
 export async function fetchLeaderboard() {
   const { data, error } = await supabase.rpc('get_leaderboard')
   if (error) throw error
-  return (data ?? []) as { rank: number; user_id: string; net_worth: number }[]
+  return (data ?? []) as { rank: number; user_id: string; display_name: string | null; net_worth: number }[]
+}
+
+export async function fetchProfile(userId: string) {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('display_name')
+    .eq('user_id', userId)
+    .maybeSingle()
+  if (error) throw error
+  return data as { display_name: string } | null
+}
+
+export async function upsertDisplayName(userId: string, displayName: string) {
+  const { error } = await supabase
+    .from('profiles')
+    .upsert({ user_id: userId, display_name: displayName }, { onConflict: 'user_id' })
+  if (error) throw error
 }
 
 export async function executeTrade(playerId: string, side: 'BUY' | 'SELL', shares: number, price: number) {

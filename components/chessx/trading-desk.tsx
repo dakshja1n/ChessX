@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { supabase } from '@/lib/supabase/client'
-import { fetchPlayers, fetchPortfolio, fetchHoldings, fetchTrades, executeTrade, fetchRatingHistory } from '@/lib/supabase/queries'
+import { fetchPlayers, fetchPortfolio, fetchHoldings, fetchTrades, executeTrade, fetchRatingHistory, fetchProfile } from '@/lib/supabase/queries'
 import {
   type ChartPoint,
   type Holding,
@@ -101,13 +101,19 @@ export function TradingDesk() {
       const uid = data.user?.id ?? null
       setUserId(uid)
       const email = data.user?.email ?? ''
-      const name = data.user?.user_metadata?.full_name ?? data.user?.user_metadata?.name ?? email.split('@')[0] ?? 'Trader'
-      setDisplayName(name.charAt(0).toUpperCase() + name.slice(1))
+      const fallback = data.user?.user_metadata?.full_name ?? data.user?.user_metadata?.name ?? email.split('@')[0] ?? 'Trader'
+      const capitalized = fallback.charAt(0).toUpperCase() + fallback.slice(1)
       if (uid) {
+        fetchProfile(uid)
+          .then((profile) => {
+            setDisplayName(profile?.display_name ?? capitalized)
+          })
+          .catch(() => setDisplayName(capitalized))
         reload(uid)
           .catch((err) => console.error('Failed to load market data:', err))
           .finally(() => setLoading(false))
       } else {
+        setDisplayName(capitalized)
         setLoading(false)
       }
     }).catch((err) => {
@@ -202,7 +208,7 @@ export function TradingDesk() {
 
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden bg-background font-sans text-foreground">
-      <HeaderBar mode={mode} onModeChange={setMode} cash={cash} netValue={cash + holdingsValue} />
+      <HeaderBar mode={mode} onModeChange={setMode} cash={cash} netValue={cash + holdingsValue} displayName={displayName} />
       <main className="min-h-0 flex-1 overflow-hidden">
         {mode === 'home' && (
           <HomeHub
@@ -252,7 +258,13 @@ export function TradingDesk() {
         )}
 
         {activeMode.status === 'phase' && <RoadmapView mode={activeMode} onModeChange={setMode} />}
-        {mode === 'leaderboard' && <LeaderboardView userId={userId} />}
+        {mode === 'leaderboard' && (
+          <LeaderboardView
+            userId={userId}
+            displayName={displayName}
+            onDisplayNameChange={setDisplayName}
+          />
+        )}
       </main>
     </div>
   )

@@ -4,7 +4,7 @@ import { FileText, KeyRound, Menu, ScrollText, Wallet } from 'lucide-react'
 import { FEE_RATE, formatUSD } from '@/lib/market-data'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 
-export function SettingsSheet({ cash }: { cash: number }) {
+export function SettingsSheet({ cash, displayName }: { cash: number; displayName: string }) {
   const sections = [
     {
       icon: Wallet,
@@ -58,7 +58,7 @@ export function SettingsSheet({ cash }: { cash: number }) {
       <SheetContent side="left" className="w-80 border-border bg-panel">
         <SheetHeader className="border-b border-border">
           <SheetTitle className="font-mono text-xs tracking-widest">ACCOUNT &amp; SETTINGS</SheetTitle>
-          <SheetDescription className="text-xs">Jordan Diaz · Verified trader</SheetDescription>
+          <SheetDescription className="text-xs">{displayName} · Verified trader</SheetDescription>
         </SheetHeader>
         <div className="flex flex-col gap-3 overflow-y-auto px-4 pb-4">
           {sections.map(({ icon: Icon, title, body, meta }) => (
