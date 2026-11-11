@@ -137,9 +137,7 @@ async function main() {
   console.log(`   Top 5: ${players.slice(0, 5).map(p => `${p.name} (${p.elo})`).join(', ')}`)
 
   console.log('\n4. Upserting to Supabase...')
-  const { error } = await supabase
-    .from('players')
-    .upsert(players, { onConflict: 'fide_id', ignoreDuplicates: false })
+  const { error } = await supabase.rpc('sync_players', { p_players: players })
 
   if (error) {
     console.error('   Supabase error:', error.message)
