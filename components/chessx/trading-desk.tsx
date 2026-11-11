@@ -1,12 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
+import { supabase } from '@/lib/supabase/client'
+import { fetchPlayers, fetchPortfolio, fetchHoldings, fetchTrades, executeTrade } from '@/lib/supabase/queries'
 import {
   FEE_RATE,
-  INITIAL_CASH,
-  INITIAL_HOLDINGS,
-  INITIAL_PLAYERS,
-  INITIAL_TRADES,
   type Holding,
   type Player,
   type Timeframe,
@@ -24,33 +22,104 @@ import { RoadmapView } from './roadmap-view'
 
 const round2 = (n: number) => Math.round(n * 100) / 100
 
+function dbPlayerToPlayer(p: Record<string, unknown>): Player {
+  return {
+    id: p.id as string,
+    name: p.name as string,
+    tickerName: ((p.name as string).split(' ').pop() ?? (p.name as string)),
+    country: '—',
+    fideId: (p.fide_id as string) ?? '',
+    price: Number(p.elo),
+    open: Number(p.elo) - Number(p.elo_change_24h ?? 0),
+    status: p.is_locked ? 'locked' : 'active',
+    peakElo: Number(p.peak_elo ?? p.elo),
+    winRate: Number(p.win_rate ?? 0),
+    tournament: (p.tournament as string) ?? '',
+  }
+}
+
+function dbHoldingToHolding(h: Record<string, unknown>): Holding {
+  return {
+    playerId: h.player_id as string,
+    shares: Number(h.shares),
+    avgPrice: Number(h.avg_cost),
+  }
+}
+
+function dbTradeToTrade(t: Record<string, unknown>): Trade {
+  return {
+    id: t.id as string,
+    timestamp: formatTimestamp(new Date(t.executed_at as string)),
+    side: t.side as TradeSide,
+    playerId: t.player_id as string,
+    shares: Number(t.shares),
+    price: Number(t.price),
+    fee: Number(t.fee),
+    status: 'FILLED',
+  }
+}
+
 export function TradingDesk() {
   const [mode, setMode] = useState<ModeId>('spot')
-  const [players, setPlayers] = useState<Player[]>(INITIAL_PLAYERS)
-  const [selectedId, setSelectedId] = useState('carlsen')
-  const [cash, setCash] = useState(INITIAL_CASH)
-  const [holdings, setHoldings] = useState<Holding[]>(INITIAL_HOLDINGS)
-  const [trades, setTrades] = useState<Trade[]>(INITIAL_TRADES)
+  const [players, setPlayers] = useState<Player[]>([])
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [cash, setCash] = useState(0)
+  const [holdings, setHoldings] = useState<Holding[]>([])
+  const [trades, setTrades] = useState<Trade[]>([])
   const [side, setSide] = useState<TradeSide>('BUY')
   const [sharesInput, setSharesInput] = useState('1')
   const [timeframe, setTimeframe] = useState<Timeframe>('1D')
   const [notice, setNotice] = useState<string | null>(null)
+  const [userId, setUserId] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  const reload = useCallback(async (uid: string) => {
+    const [dbPlayers, portfolio, dbHoldings, dbTrades] = await Promise.all([
+      fetchPlayers(),
+      fetchPortfolio(uid),
+      fetchHoldings(uid),
+      fetchTrades(uid),
+    ])
+    const mapped = (dbPlayers ?? []).map(dbPlayerToPlayer)
+    setPlayers(mapped)
+    setSelectedId((prev) => prev ?? mapped[0]?.id ?? null)
+    setCash(portfolio?.cash ?? 10000)
+    setHoldings((dbHoldings ?? []).map(dbHoldingToHolding))
+    setTrades((dbTrades ?? []).map(dbTradeToTrade))
+  }, [])
 
   useEffect(() => {
-    const id = setInterval(() => {
-      setPlayers((prev) =>
-        prev.map((p) => {
-          if (p.status === 'locked' || Math.random() > 0.45) return p
-          const delta = (Math.random() - 0.5) * 1.2
-          return { ...p, price: round2(Math.max(2000, p.price + delta)) }
-        }),
-      )
-    }, 2500)
-    return () => clearInterval(id)
+    supabase.auth.getUser().then(({ data }) => {
+      const uid = data.user?.id ?? null
+      setUserId(uid)
+      if (uid) {
+        reload(uid)
+          .catch((err) => console.error('Failed to load market data:', err))
+          .finally(() => setLoading(false))
+      } else {
+        setLoading(false)
+      }
+    }).catch((err) => {
+      console.error('Auth error:', err)
+      setLoading(false)
+    })
+  }, [reload])
+
+  // Realtime player updates
+  useEffect(() => {
+    const channel = supabase
+      .channel('players-realtime')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'players' }, (payload) => {
+        setPlayers((prev) =>
+          prev.map((p) => (p.id === payload.new.id ? dbPlayerToPlayer(payload.new) : p)),
+        )
+      })
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
   }, [])
 
   const player = players.find((p) => p.id === selectedId) ?? players[0]
-  const ownedShares = holdings.find((h) => h.playerId === player.id)?.shares ?? 0
+  const ownedShares = holdings.find((h) => h.playerId === player?.id)?.shares ?? 0
 
   let holdingsValue = 0
   let pnl24h = 0
@@ -75,55 +144,31 @@ export function TradingDesk() {
     setMode('spot')
   }
 
-  const execute = () => {
+  const execute = async () => {
+    if (!userId || !player) return
     const shares = Number.parseInt(sharesInput, 10)
     if (!shares || shares <= 0 || player.status === 'locked') return
 
-    const price = player.price
-    const subtotal = shares * price
-    const fee = round2(subtotal * FEE_RATE)
-
-    if (side === 'BUY') {
-      const total = subtotal + fee
-      if (total > cash) return
-      setCash((c) => round2(c - total))
-      setHoldings((prev) => {
-        const existing = prev.find((h) => h.playerId === player.id)
-        if (!existing) return [...prev, { playerId: player.id, shares, avgPrice: price }]
-        return prev.map((h) =>
-          h.playerId === player.id
-            ? { ...h, shares: h.shares + shares, avgPrice: round2((h.avgPrice * h.shares + price * shares) / (h.shares + shares)) }
-            : h,
-        )
-      })
-    } else {
-      if (shares > ownedShares) return
-      setCash((c) => round2(c + subtotal - fee))
-      setHoldings((prev) =>
-        prev
-          .map((h) => (h.playerId === player.id ? { ...h, shares: h.shares - shares } : h))
-          .filter((h) => h.shares > 0),
-      )
+    try {
+      await executeTrade(player.id, side, shares, player.price)
+      await reload(userId)
+      setNotice(`${side === 'BUY' ? 'Bought' : 'Sold'} ${shares} × ${player.tickerName} @ $${player.price.toFixed(2)} — FILLED`)
+      setSharesInput('1')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : typeof err === 'object' && err !== null && 'message' in err ? String((err as {message: unknown}).message) : 'Trade failed'
+      setNotice(`Error: ${msg}`)
     }
-
-    setTrades((prev) => [
-      {
-        id: `t-${Date.now()}`,
-        timestamp: formatTimestamp(new Date()),
-        side,
-        playerId: player.id,
-        shares,
-        price,
-        fee,
-        status: 'FILLED',
-      },
-      ...prev,
-    ])
-    setNotice(`${side === 'BUY' ? 'Bought' : 'Sold'} ${shares} × ${player.tickerName} @ $${price.toFixed(2)} — FILLED`)
-    setSharesInput('1')
   }
 
   const activeMode = MODES.find((m) => m.id === mode) ?? MODES[1]
+
+  if (loading) return (
+    <div className="flex h-screen items-center justify-center bg-background text-foreground text-sm">
+      Loading market data...
+    </div>
+  )
+
+  if (!player) return null
 
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden bg-background font-sans text-foreground">
