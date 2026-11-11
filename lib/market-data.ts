@@ -24,7 +24,16 @@ export type Holding = {
   liquidationPrice: number | null
 }
 
-export type TradeSide = 'BUY' | 'SELL'
+export type TradeSide = 'BUY' | 'SELL' | 'SHORT' | 'COVER'
+
+export type ShortPosition = {
+  id: string
+  playerId: string
+  shares: number
+  openPrice: number
+  collateral: number
+  liquidationPrice: number
+}
 
 export type Trade = {
   id: string

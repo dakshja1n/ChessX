@@ -26,6 +26,9 @@ create policy "Users manage own profile"
 grant select on public.profiles to authenticated;
 grant insert, update on public.profiles to authenticated;
 
+-- Drop old leaderboard function so we can change its return type (add display_name column)
+drop function if exists public.get_leaderboard();
+
 -- Update leaderboard RPC to include display_name
 create or replace function public.get_leaderboard()
 returns table (

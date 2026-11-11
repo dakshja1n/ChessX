@@ -1,5 +1,5 @@
 import { ArrowRight, Lock } from 'lucide-react'
-import { type Holding, type Player, type Trade, formatPct, formatUSD } from '@/lib/market-data'
+import { type Holding, type Player, type ShortPosition, type Trade, formatPct, formatUSD } from '@/lib/market-data'
 import { cn } from '@/lib/utils'
 import { MODES, type ModeId } from './modes'
 import { PortfolioPanel } from './portfolio-panel'
@@ -8,15 +8,17 @@ type HomeHubProps = {
   players: Player[]
   holdings: Holding[]
   trades: Trade[]
+  shorts: ShortPosition[]
   cash: number
   holdingsValue: number
   pnl24h: number
   displayName: string
   onModeChange: (mode: ModeId) => void
   onQuickSell: (playerId: string) => void
+  onQuickCover: (shortId: string) => void
 }
 
-export function HomeHub({ players, holdings, trades, cash, holdingsValue, pnl24h, displayName, onModeChange, onQuickSell }: HomeHubProps) {
+export function HomeHub({ players, holdings, trades, shorts, cash, holdingsValue, pnl24h, displayName, onModeChange, onQuickSell, onQuickCover }: HomeHubProps) {
   const netWorth = cash + holdingsValue
   const pnlPct = holdingsValue - pnl24h > 0 ? (pnl24h / (holdingsValue - pnl24h)) * 100 : 0
   const gameModes = MODES.filter((m) => m.id !== 'home')
@@ -107,7 +109,7 @@ export function HomeHub({ players, holdings, trades, cash, holdingsValue, pnl24h
       </section>
 
       <div className="flex min-h-0 flex-1 flex-col">
-        <PortfolioPanel players={players} holdings={holdings} trades={trades} onQuickSell={onQuickSell} title="GLOBAL PORTFOLIO OVERVIEW" />
+        <PortfolioPanel players={players} holdings={holdings} trades={trades} shorts={shorts} onQuickSell={onQuickSell} onQuickCover={onQuickCover} title="GLOBAL PORTFOLIO OVERVIEW" />
       </div>
     </div>
   )

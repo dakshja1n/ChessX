@@ -199,6 +199,32 @@ async function main() {
     }
   }
 
+  console.log('\n7. Checking short positions for liquidation...')
+  const { data: shortPositions, error: shortFetchErr } = await supabase
+    .from('short_positions')
+    .select('id, user_id, liquidation_price, players(elo)')
+
+  if (shortFetchErr) {
+    console.error('   Could not fetch short positions:', shortFetchErr.message)
+  } else {
+    const toLiquidateShort = (shortPositions ?? []).filter(s => s.players && s.players.elo >= s.liquidation_price)
+    if (toLiquidateShort.length === 0) {
+      console.log('   ✓ No short positions at liquidation')
+    } else {
+      for (const s of toLiquidateShort) {
+        const { error: liqErr } = await supabase.rpc('liquidate_short', {
+          p_user_id: s.user_id,
+          p_short_id: s.id,
+        })
+        if (liqErr) {
+          console.error(`   Failed to liquidate short ${s.user_id.slice(0, 8)}/${s.id.slice(0, 8)}:`, liqErr.message)
+        } else {
+          console.log(`   ✓ Liquidated short: user=${s.user_id.slice(0, 8)} short=${s.id.slice(0, 8)} (elo=${s.players.elo} >= liq=${s.liquidation_price})`)
+        }
+      }
+    }
+  }
+
   // Cleanup
   try { unlinkSync(TMP_ZIP) } catch {}
   try { unlinkSync(xmlPath) } catch {}

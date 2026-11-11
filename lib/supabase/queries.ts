@@ -89,6 +89,34 @@ export async function upsertDisplayName(userId: string, displayName: string) {
   if (error) throw error
 }
 
+export async function fetchShortPositions(userId: string) {
+  const { data, error } = await supabase
+    .from('short_positions')
+    .select('*')
+    .eq('user_id', userId)
+    .order('opened_at', { ascending: false })
+  if (error) throw error
+  return data ?? []
+}
+
+export async function openShort(playerId: string, shares: number, price: number) {
+  const { error } = await supabase.rpc('open_short', {
+    p_player_id: playerId,
+    p_shares: shares,
+    p_price: price,
+  })
+  if (error) throw error
+}
+
+export async function coverShort(shortId: string, shares: number, price: number) {
+  const { error } = await supabase.rpc('cover_short', {
+    p_short_id: shortId,
+    p_shares: shares,
+    p_price: price,
+  })
+  if (error) throw error
+}
+
 export async function executeTrade(playerId: string, side: 'BUY' | 'SELL', shares: number, price: number, leverage = 1) {
   const { data, error } = await supabase.rpc('execute_trade', {
     p_player_id: playerId,
